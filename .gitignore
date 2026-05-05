@@ -1,0 +1,20 @@
+# Secrets and sessions
+.env
+playwright_profile/
+
+# Generated outputs
+screenshots/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+node_modules/
+playwright-report/
+test-results/
+.env
+
