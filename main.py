@@ -56,24 +56,23 @@ async def main():
             # --- Login (only needed before adding to the reading list) -----
             session_page = SessionPage(page)
             username = await session_page.is_logged_in()
-            if username!="not connected":
+            print('str1',username)
+            if not username:
                 email = os.environ.get("OPENLIBRARY_EMAIL")
                 password = os.environ.get("OPENLIBRARY_PASSWORD")
                 login_page = LoginPage(page)
                 await login_page.goto()
-                username = await login_page.login(email, password)
+                await login_page.login(email, password)
+                username = await session_page.is_logged_in()
                 if username:
                     print(f"Successfully logged in as {username}")
                 else:
                     print("Login failed: check credentials and try again.")
-                    return
-                
-            username=await session_page.get_username()
-            print('str2',username)     
+                    return  
             
             # --- Search  ---------------------------------
             search_page = BookSearchPage(page)
-            books = await search_page.search_books_by_title_under_year("Anthology", 1500, 2)
+            books = await search_page.search_books_by_title_under_year("Permanent", 1980, 2)
             print(f"Found {len(books)} books:")
             for b in books:
                 #icon = {True: "+", False: " ", None: "?"}[b.activated]                
