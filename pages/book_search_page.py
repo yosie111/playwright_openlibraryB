@@ -97,7 +97,7 @@ class BookSearchPage(BasePage):
                 if info.year <= max_year:
                     collected.append(info)
 
-            if len(collected) < limit and pages_checked < max_pages:
+            if len(collected) < limit:
                 moved = await self.go_to_next_page()
                 if not moved:
                     break

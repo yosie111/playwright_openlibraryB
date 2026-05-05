@@ -26,8 +26,6 @@ class SessionPage(BasePage):
         return m.group(1) if m else None
 
     async def get_username(self) -> Optional[str]:
-        st = await self.is_logged_in()
-        print('st',st)
         return await self.is_logged_in()
 
     async def is_logged_out(self) -> Optional[str]:

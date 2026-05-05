@@ -1,3 +1,5 @@
+from typing import Optional
+
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from config import BASE_URL
@@ -23,11 +25,12 @@ class LoginPage(BasePage):
     async def goto(self):
         await self.page.goto(f"{BASE_URL}{self.PATH}")
 
-    async def login(self, email, password) -> bool:
-
+    async def login(self, email: str, password: str) -> Optional[str]:
+        """Submit credentials and return the logged-in username, or None on failure."""
         # Pre-check: already authenticated?
-        if await self.session.is_logged_in():
-            return True
+        username = await self.session.is_logged_in()
+        if username:
+            return username
 
         await self.page.fill(self.USERNAME_INPUT, email)
         await self.page.fill(self.PASSWORD_INPUT, password)
@@ -38,12 +41,9 @@ class LoginPage(BasePage):
             ):
                 await self.page.click(self.SUBMIT_BUTTON)
         except PlaywrightTimeoutError:
-            
             await self.page.wait_for_load_state("networkidle")
 
-        # Post-check: did the session actually become authenticated?
-        username = await self.session.is_logged_in()
-        return username is not None
+        return await self.session.is_logged_in()
 
     async def get_error_message(self):
         el = await self.page.query_selector(self.ERROR_MESSAGE)

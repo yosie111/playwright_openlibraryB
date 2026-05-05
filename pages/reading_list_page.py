@@ -4,14 +4,15 @@ from pages.book_page import BookPage
 from pages.models import BookInfo
 from utils import make_safe_filename
 
+
 def books_needing_add(books: list[BookInfo]) -> list[BookInfo]:
     return [b for b in books if b.activated is not True]
+
 
 class ReadingListPage(BasePage):
 
     PATH = "/account/books/want-to-read"
     LIST_ITEM_SELECTOR = ".searchResultItem"
-    # LIST_ITEM_SELECTOR    = ".listbook-item"
 
     def __init__(self, page):
         super().__init__(page)

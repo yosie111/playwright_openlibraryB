@@ -56,7 +56,7 @@ async def main():
             # --- Login (only needed before adding to the reading list) -----
             session_page = SessionPage(page)
             username = await session_page.is_logged_in()
-            if username!="not connected":
+            if not username:
                 email = os.environ.get("OPENLIBRARY_EMAIL")
                 password = os.environ.get("OPENLIBRARY_PASSWORD")
                 login_page = LoginPage(page)
@@ -67,9 +67,6 @@ async def main():
                 else:
                     print("Login failed: check credentials and try again.")
                     return
-                
-            username=await session_page.get_username()
-            print('str2',username)     
             
             # --- Search  ---------------------------------
             search_page = BookSearchPage(page)
