@@ -14,7 +14,7 @@ async def measure_page_performance(
     threshold_ms: int,
     label: str,
 ) -> dict:
-    """Measure timings after navigation and return metrics + metadata."""
+    """After navigation, return timings + metadata and warn on threshold breach."""
     metrics = await _read_browser_metrics(page)
 
     load_time = metrics["load_time_ms"]
