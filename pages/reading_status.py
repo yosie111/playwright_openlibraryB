@@ -1,4 +1,4 @@
-"""Shared Want-to-Read button state helpers."""
+"""Helpers for Want-to-Read button state on page and search card DOM."""
 from typing import Optional
 
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -25,7 +25,7 @@ STATUS_TO_BOOL = {
 
 
 async def read_button_state(btn) -> Optional[str]:
-    """Return button state: activated, unactivated, or None."""
+    """Return state from card or book-page button: activated/unactivated/None."""
     if btn is None:
         return None
 
