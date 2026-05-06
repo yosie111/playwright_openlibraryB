@@ -14,7 +14,7 @@ class BookSearchPage(BasePage):
     NEXT_PAGE_SELECTOR = "ol-pagination a[aria-label='Go to next page']"
     LINK_SELECTOR = ".booktitle a"
     WANT_TO_READ_BTN = "button.book-progress-btn"
-    _STATUS_TO_BOOL = {"activated": True, "unactivated": False}
+    STATUS_TO_BOOL = {"activated": True, "unactivated": False}
 
     def __init__(self, page):
         super().__init__(page)
@@ -30,12 +30,16 @@ class BookSearchPage(BasePage):
         self.next_page_button = self.NEXT_PAGE_SELECTOR
         self.book_page = BookPage(page)
 
+    # async def search(self, query):
+    #     await self.fill_and_submit(
+    #         self.search_input,
+    #         self.search_button,
+    #         query,
+    #     )
     async def search(self, query):
-        await self.fill_and_submit(
-            self.search_input,
-            self.search_button,
-            query,
-        )
+        await self.page.fill(self.search_input, query)
+        async with self.page.expect_navigation(wait_until="load"):
+            await self.page.click(self.search_button)
 
     async def extract_reading_status(self, item) -> Optional[str]:
         btn = await item.query_selector(self.WANT_TO_READ_BTN)
@@ -65,7 +69,7 @@ class BookSearchPage(BasePage):
             return None
 
         status = await self.extract_reading_status(item)
-        activated = self._STATUS_TO_BOOL.get(status)  # None if unknown
+        activated = self.STATUS_TO_BOOL.get(status)  # None if unknown
 
         return BookInfo(
             url=BASE_URL + href,
