@@ -32,8 +32,6 @@ class ReadingListPage(BasePage):
         await self.page.goto(url)
         return await self.get_book_count()
 
-    
-    
     async def assert_reading_list_count(
         self, username: str, expected_count: int
     ) -> None:
@@ -44,9 +42,8 @@ class ReadingListPage(BasePage):
         )
 
     async def add_books_to_reading_list(
-        self,
-        books: list[BookInfo]
-        ) -> None:
+        self, books: list[BookInfo]
+    ) -> None:
         for info in books:
             await self.book_page.goto(info.url)
             status = await self.book_page.get_reading_status()

@@ -38,7 +38,6 @@ class BookSearchPage(BasePage):
         )
 
     async def extract_reading_status(self, item) -> Optional[str]:
-        
         btn = await item.query_selector(self.WANT_TO_READ_BTN)
         if btn is None:
             return None
@@ -76,7 +75,7 @@ class BookSearchPage(BasePage):
 
     async def collect_books_under_year(
         self, max_year: int, limit: int, max_pages: int = 5
-            ) -> list[BookInfo]:
+    ) -> list[BookInfo]:
         collected: list[BookInfo] = []
         pages_checked = 0
 
@@ -109,5 +108,6 @@ class BookSearchPage(BasePage):
     ) -> list[BookInfo]:
         await self.search(query)
         print(f"Searching for '{query}' and filtering by year <= {max_year}...")
-        return await self.collect_books_under_year(max_year, limit, max_pages=5,
-)
+        return await self.collect_books_under_year(
+            max_year, limit, max_pages=5
+        )
