@@ -6,7 +6,6 @@ from pages.session_page import SessionPage
 
 
 class LoginPage(BasePage):
-    
     PATH = "/account/login"
 
     USERNAME_INPUT = "input#username"
@@ -17,7 +16,7 @@ class LoginPage(BasePage):
 
     def __init__(self, page):
         super().__init__(page)
-    
+
         self.session = SessionPage(page)
 
     async def goto(self):
@@ -38,7 +37,6 @@ class LoginPage(BasePage):
             ):
                 await self.page.click(self.SUBMIT_BUTTON)
         except PlaywrightTimeoutError:
-            
             await self.page.wait_for_load_state("networkidle")
 
         # Post-check: did the session actually become authenticated?
