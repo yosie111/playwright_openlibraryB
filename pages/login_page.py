@@ -39,7 +39,7 @@ class LoginPage(BasePage):
         except PlaywrightTimeoutError:
             await self.page.wait_for_load_state("networkidle")
 
-        # Post-check: did the session actually become authenticated?
+        # Verify authentication after submit.
         username = await self.session.is_logged_in()
         return username is not None
 

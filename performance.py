@@ -14,16 +14,10 @@ async def measure_page_performance(
     threshold_ms: int,
     label: str,
 ) -> dict:
-    """Measure load timings for the currently-loaded page.
-
-    Call this AFTER the page has finished navigating to `url`.
-    Returns a dict with the three metrics, plus metadata.
-    Logs a warning if load_time_ms exceeds threshold_ms.
-    """
+    """Measure page timings and flag threshold breaches."""
     metrics = await _read_browser_metrics(page)
 
     load_time = metrics["load_time_ms"]
-    #exceeded = load_time is not None and load_time > threshold_ms
     exceeded = load_time is not 0 and (load_time is not None and load_time > threshold_ms)
 
     if exceeded:

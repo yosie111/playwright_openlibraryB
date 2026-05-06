@@ -10,7 +10,7 @@ from config import BASE_URL, SCREENSHOTS_DIR
 from flows.auth_flow import login_if_needed
 from pages.book_search_page import BookSearchPage
 
-# Load .env from the script's directory (works regardless of cwd).
+# Load .env next to this script.
 load_dotenv(Path(__file__).parent / ".env")
 
 logging.basicConfig(
@@ -21,7 +21,7 @@ logging.basicConfig(
 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 PROFILE_DIR = "playwright_profile"
 
-# One-book run configuration
+# One-book run settings.
 QUERY = "harry"
 MAX_YEAR = 1950
 LIMIT = 3
@@ -58,7 +58,7 @@ async def main():
 
             search_page = BookSearchPage(page)
 
-            # `debug` parameter was removed from BookSearchPage.
+            # Call without debug parameter.
             books = await search_page.search_books_by_title_under_year(
                 query=QUERY,
                 max_year=MAX_YEAR,
