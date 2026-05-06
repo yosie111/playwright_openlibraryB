@@ -18,3 +18,4 @@ playwright-report/
 test-results/
 .env
 
+performance_report.json
