@@ -22,7 +22,7 @@ def load_search_cases(path: Union[str, Path]) -> list[SearchCase]:
                 f"CSV missing required columns: {sorted(missing)}"
             )
 
-        for row_num, row in enumerate(reader, start=2):  # 2 = first data row
+        for row_num, row in enumerate(reader, start=2):
             try:
                 cases.append(
                     SearchCase(

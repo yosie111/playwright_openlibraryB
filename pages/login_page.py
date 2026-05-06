@@ -24,7 +24,7 @@ class LoginPage(BasePage):
 
     async def login(self, email, password) -> bool:
 
-        # Pre-check: already authenticated?
+        # Skip if already logged in
         if await self.session.is_logged_in():
             return True
 
@@ -39,7 +39,7 @@ class LoginPage(BasePage):
         except PlaywrightTimeoutError:
             await self.page.wait_for_load_state("networkidle")
 
-        # Post-check: did the session actually become authenticated?
+        # Verify login succeeded
         username = await self.session.is_logged_in()
         return username is not None
 

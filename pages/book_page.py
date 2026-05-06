@@ -13,7 +13,7 @@ from pages.reading_status import (
 
 
 class BookPage(BasePage):
-    # Selectors come from the shared module -- single source of truth.
+    # Shared selectors
     WANT_TO_READ_BUTTON = WANT_TO_READ_BUTTON
     BUTTON_ACTIVATED = f"{WANT_TO_READ_BUTTON}.{ACTIVATED_CLASS}"
     BUTTON_UNACTIVATED = f"{WANT_TO_READ_BUTTON}.{UNACTIVATED_CLASS}"
@@ -22,7 +22,6 @@ class BookPage(BasePage):
         await self.page.goto(url)
 
     async def get_reading_status(self) -> Optional[str]:
-        # Wait for sync, then read state via shared helper.
         if not await wait_for_stable_state(self.page):
             return None
 

@@ -11,15 +11,11 @@ class ReadingListPage(BasePage):
 
     PATH = "/account/books/want-to-read"
     LIST_ITEM_SELECTOR = ".searchResultItem"
-    # LIST_ITEM_SELECTOR    = ".listbook-item"
 
     def __init__(self, page):
         super().__init__(page)
         self.results = self.LIST_ITEM_SELECTOR
-        # Composition: per-book operations are delegated here.
         self.book_page = BookPage(page)
-
-    # --- Operations on the /want-to-read listing itself ----------------
 
     async def goto(self):
         await self.page.goto(f"{BASE_URL}{self.PATH}")
@@ -64,7 +60,7 @@ class ReadingListPage(BasePage):
     async def remove_books_from_reading_list(
         self, books: list[BookInfo]
     ) -> None:
-        """Symmetric counterpart -- useful for cleanup and tests."""
+        """Remove books from the reading list."""
         for info in books:
             await self.book_page.goto(info.url)
             try:

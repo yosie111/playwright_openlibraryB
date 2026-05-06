@@ -1,4 +1,4 @@
-"""Performance measurement utilities for page navigations."""
+"""Performance measurement utilities."""
 
 import json
 import logging
@@ -14,16 +14,10 @@ async def measure_page_performance(
     threshold_ms: int,
     label: str,
 ) -> dict:
-    """Measure load timings for the currently-loaded page.
-
-    Call this AFTER the page has finished navigating to `url`.
-    Returns a dict with the three metrics, plus metadata.
-    Logs a warning if load_time_ms exceeds threshold_ms.
-    """
+    """Measure load timings for the current page."""
     metrics = await _read_browser_metrics(page)
 
     load_time = metrics["load_time_ms"]
-    #exceeded = load_time is not None and load_time > threshold_ms
     exceeded = load_time is not 0 and (load_time is not None and load_time > threshold_ms)
 
     if exceeded:
@@ -46,7 +40,7 @@ async def measure_page_performance(
 
 
 async def _read_browser_metrics(page) -> dict:
-    """Read timing values from the browser's Performance API."""
+    """Read timings from the browser Performance API."""
     js = """
     () => {
         const nav = performance.getEntriesByType('navigation')[0];
@@ -65,7 +59,7 @@ async def _read_browser_metrics(page) -> dict:
 
 
 class PerformanceCollector:
-    """Collects measurements and writes a JSON report at the end."""
+    """Collect measurements and write a JSON report."""
 
     def __init__(self):
         self.measurements: list[dict] = []

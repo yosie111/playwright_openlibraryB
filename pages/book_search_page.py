@@ -18,7 +18,7 @@ class BookSearchPage(BasePage):
     RESULTS_SELECTOR = ".searchResultItem"
     NEXT_PAGE_SELECTOR = "ol-pagination a[aria-label='Go to next page']"
     LINK_SELECTOR = ".booktitle a"
-    # Button inside a search-result card -- imported from shared module.
+    # Button inside a search-result card
     WANT_TO_READ_BTN = WANT_TO_READ_BUTTON_IN_CARD
 
     def __init__(self, page):
@@ -41,7 +41,6 @@ class BookSearchPage(BasePage):
             await self.page.click(self.search_button)
 
     async def extract_reading_status(self, item) -> Optional[str]:
-        # Delegated to the shared helper -- no duplicated logic.
         btn = await item.query_selector(self.WANT_TO_READ_BTN)
         return await read_button_state(btn)
 
@@ -60,7 +59,7 @@ class BookSearchPage(BasePage):
             return None
 
         status = await self.extract_reading_status(item)
-        activated = STATUS_TO_BOOL.get(status)  # None if unknown
+        activated = STATUS_TO_BOOL.get(status)
 
         return BookInfo(
             url=BASE_URL + href,

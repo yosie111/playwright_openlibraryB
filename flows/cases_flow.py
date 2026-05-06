@@ -9,13 +9,13 @@ from performance import measure_page_performance
 
 
 async def run_case(case, page, username, collector):
-    """Run a single CSV-driven test case end-to-end with measurements."""
+    """Run a single test case with measurements."""
     print(
         f"\n--- Case: '{case.query}' "
         f"(year <= {case.max_year}, limit {case.limit}) ---"
     )
 
-    # --- Search + measure search page ---------------------------------
+    # Search + measure
     search_page = BookSearchPage(page)
     await search_page.search(case.query)
 
@@ -28,7 +28,6 @@ async def run_case(case, page, username, collector):
         )
     )
 
-    # Collect filtered books from the same search results.
     books = await search_page.collect_books_under_year(
         case.max_year, case.limit, max_pages=5
     )
@@ -39,7 +38,7 @@ async def run_case(case, page, username, collector):
     to_add = books_needing_add(books)
     reading_list_page = ReadingListPage(page)
 
-    # --- Measure first book-page navigation (if any) ------------------
+    # Measure first book page
     if to_add:
         await reading_list_page.book_page.goto(to_add[0].url)
         collector.add(
@@ -51,7 +50,7 @@ async def run_case(case, page, username, collector):
             )
         )
 
-    # --- Reading list count + measure reading list page ---------------
+    # Count + measure reading list page
     count_before = await reading_list_page.get_want_to_read_count(username)
     collector.add(
         await measure_page_performance(
@@ -64,7 +63,7 @@ async def run_case(case, page, username, collector):
 
     print(f"  Reading list before: {count_before}")
 
-    # --- Add and assert -----------------------------------------------
+    # Add and assert
     await reading_list_page.add_books_to_reading_list(to_add)
     expected = count_before + len(to_add)
     await reading_list_page.assert_reading_list_count(username, expected)
@@ -72,7 +71,7 @@ async def run_case(case, page, username, collector):
 
 
 async def run_all_cases(cases, page, username, collector):
-    """Run every case; track pass/fail without aborting the run."""
+    """Run every case; track pass/fail."""
     passed = failed = 0
     for case in cases:
         try:

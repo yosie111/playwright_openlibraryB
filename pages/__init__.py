@@ -22,7 +22,7 @@ __all__ = [
     "ReadingListPage",
     "SearchCase",
     "SessionPage",
-    # reading status helpers
+    # status helpers
     "STATUS_ACTIVATED",
     "STATUS_UNACTIVATED",
     "STATUS_TO_BOOL",

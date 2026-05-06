@@ -9,8 +9,7 @@ class SessionPage(BasePage):
     ACCOUNT_ICON = "img.account__icon"
     LOGIN_LINKS = "li.login-links"
 
-    # Match the @USERNAME suffix in the avatar URL.
-    # Example src: https://archive.org/services/img/@yosi545433
+    # Extract username from avatar URL
     USERNAME_FROM_SRC = re.compile(r"/img/@([^/?#]+)")
 
     async def is_logged_in(self) -> Optional[str]:

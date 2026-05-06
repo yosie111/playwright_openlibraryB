@@ -15,7 +15,7 @@ from flows.cases_flow import run_all_cases
 from performance import PerformanceCollector
 from utils import load_search_cases
 
-# Load .env from the script's directory (works regardless of cwd).
+# Load .env
 load_dotenv(Path(__file__).parent / ".env")
 
 logging.basicConfig(
@@ -64,7 +64,7 @@ async def main():
             await run_all_cases(cases, page, username, collector)
 
         finally:
-            # Always write the report — even if the run crashed mid-way.
+            # Always write the report
             collector.write_report(PERF_REPORT_PATH)
 
             print("\nDone. Inspect the browser.")
