@@ -18,7 +18,11 @@ async def measure_page_performance(
     metrics = await _read_browser_metrics(page)
 
     load_time = metrics["load_time_ms"]
-    exceeded = load_time is not 0 and (load_time is not None and load_time > threshold_ms)
+    exceeded = (
+        load_time is not None
+        and load_time != 0
+        and load_time > threshold_ms
+    )
 
     if exceeded:
         logger.warning(
