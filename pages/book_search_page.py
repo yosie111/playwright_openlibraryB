@@ -5,6 +5,11 @@ from config import BASE_URL
 from pages.base_page import BasePage
 from pages.book_page import BookPage
 from pages.models import BookInfo
+from pages.reading_status import (
+    STATUS_TO_BOOL,
+    WANT_TO_READ_BUTTON_IN_CARD,
+    read_button_state,
+)
 
 
 class BookSearchPage(BasePage):
@@ -13,8 +18,8 @@ class BookSearchPage(BasePage):
     RESULTS_SELECTOR = ".searchResultItem"
     NEXT_PAGE_SELECTOR = "ol-pagination a[aria-label='Go to next page']"
     LINK_SELECTOR = ".booktitle a"
-    WANT_TO_READ_BTN = "button.book-progress-btn"
-    STATUS_TO_BOOL = {"activated": True, "unactivated": False}
+    # Button inside a search-result card -- imported from shared module.
+    WANT_TO_READ_BTN = WANT_TO_READ_BUTTON_IN_CARD
 
     def __init__(self, page):
         super().__init__(page)
@@ -30,29 +35,15 @@ class BookSearchPage(BasePage):
         self.next_page_button = self.NEXT_PAGE_SELECTOR
         self.book_page = BookPage(page)
 
-    # async def search(self, query):
-    #     await self.fill_and_submit(
-    #         self.search_input,
-    #         self.search_button,
-    #         query,
-    #     )
     async def search(self, query):
         await self.page.fill(self.search_input, query)
         async with self.page.expect_navigation(wait_until="load"):
             await self.page.click(self.search_button)
 
     async def extract_reading_status(self, item) -> Optional[str]:
+        # Delegated to the shared helper -- no duplicated logic.
         btn = await item.query_selector(self.WANT_TO_READ_BTN)
-        if btn is None:
-            return None
-
-        cls = await btn.get_attribute("class") or ""
-        classes = cls.split()
-        if "activated" in classes:
-            return "activated"
-        if "unactivated" in classes:
-            return "unactivated"
-        return None
+        return await read_button_state(btn)
 
     async def extract_card_info(self, item) -> Optional[BookInfo]:
         text = await item.inner_text()
@@ -69,7 +60,7 @@ class BookSearchPage(BasePage):
             return None
 
         status = await self.extract_reading_status(item)
-        activated = self.STATUS_TO_BOOL.get(status)  # None if unknown
+        activated = STATUS_TO_BOOL.get(status)  # None if unknown
 
         return BookInfo(
             url=BASE_URL + href,

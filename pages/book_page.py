@@ -1,38 +1,33 @@
-from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from typing import Optional
 
 from pages.base_page import BasePage
+from pages.reading_status import (
+    ACTIVATED_CLASS,
+    STATUS_ACTIVATED,
+    STATUS_UNACTIVATED,
+    UNACTIVATED_CLASS,
+    WANT_TO_READ_BUTTON,
+    read_button_state,
+    wait_for_stable_state,
+)
 
 
 class BookPage(BasePage):
-
-    WANT_TO_READ_FORM = "form.reading-log.primary-action"
-    WANT_TO_READ_BUTTON = f"{WANT_TO_READ_FORM} button.book-progress-btn"
-
-    BUTTON_ACTIVATED = f"{WANT_TO_READ_BUTTON}.activated"
-    BUTTON_UNACTIVATED = f"{WANT_TO_READ_BUTTON}.unactivated"
+    # Selectors come from the shared module -- single source of truth.
+    WANT_TO_READ_BUTTON = WANT_TO_READ_BUTTON
+    BUTTON_ACTIVATED = f"{WANT_TO_READ_BUTTON}.{ACTIVATED_CLASS}"
+    BUTTON_UNACTIVATED = f"{WANT_TO_READ_BUTTON}.{UNACTIVATED_CLASS}"
 
     async def goto(self, url: str) -> None:
         await self.page.goto(url)
 
-    async def get_reading_status(self) -> str:
-        try:
-            await self.page.wait_for_function(
-                f"""() => document.querySelector({self.BUTTON_ACTIVATED!r})
-                    || document.querySelector({self.BUTTON_UNACTIVATED!r})""",
-                timeout=5000,
-            )
-        except PlaywrightTimeoutError:
-            return ""
+    async def get_reading_status(self) -> Optional[str]:
+        # Wait for sync, then read state via shared helper.
+        if not await wait_for_stable_state(self.page):
+            return None
 
-        activated_el = await self.page.query_selector(self.BUTTON_ACTIVATED)
-        if activated_el is not None:
-            return "activated"
-
-        unactivated_el = await self.page.query_selector(self.BUTTON_UNACTIVATED)
-        if unactivated_el is not None:
-            return "unactivated"
-
-        return ""
+        btn = await self.page.query_selector(self.WANT_TO_READ_BUTTON)
+        return await read_button_state(btn)
 
     async def click_and_wait_for_state(self, expected_selector: str) -> None:
         async with self.page.expect_response(
@@ -48,23 +43,15 @@ class BookPage(BasePage):
         )
 
     async def add_to_reading_list(self) -> bool:
-        status = await self.get_reading_status()
-
-        if status == "activated":
+        if await self.get_reading_status() == STATUS_ACTIVATED:
             return True
 
         await self.click_and_wait_for_state(self.BUTTON_ACTIVATED)
-
-        status = await self.get_reading_status()
-        return status == "activated"
+        return await self.get_reading_status() == STATUS_ACTIVATED
 
     async def remove_from_reading_list(self) -> bool:
-        status = await self.get_reading_status()
-
-        if status == "unactivated":
+        if await self.get_reading_status() == STATUS_UNACTIVATED:
             return True
 
         await self.click_and_wait_for_state(self.BUTTON_UNACTIVATED)
-
-        status = await self.get_reading_status()
-        return status == "unactivated"
+        return await self.get_reading_status() == STATUS_UNACTIVATED
