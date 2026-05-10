@@ -1,34 +1,37 @@
-from typing import Optional
-
 from pages.base_page import BasePage
-from pages.reading_status import (
-    ACTIVATED_CLASS,
-    STATUS_ACTIVATED,
-    STATUS_UNACTIVATED,
-    UNACTIVATED_CLASS,
-    WANT_TO_READ_BUTTON,
-    read_button_state,
-    wait_for_stable_state,
-)
+from pages.models import BOOKSHELF_WANT_TO_READ
+from pages.reading_status import get_bookshelf_status
 
 
 class BookPage(BasePage):
-    # Shared selectors
-    WANT_TO_READ_BUTTON = WANT_TO_READ_BUTTON
-    BUTTON_ACTIVATED = f"{WANT_TO_READ_BUTTON}.{ACTIVATED_CLASS}"
-    BUTTON_UNACTIVATED = f"{WANT_TO_READ_BUTTON}.{UNACTIVATED_CLASS}"
+    # The primary reading-log form/button on the book page
+    WANT_TO_READ_FORM = "form.reading-log.primary-action"
+    WANT_TO_READ_BUTTON = f"{WANT_TO_READ_FORM} button.book-progress-btn"
+    ACTION_INPUT_SELECTOR = (
+        f"{WANT_TO_READ_FORM} input[name='action']"
+    )
 
     async def goto(self, url: str) -> None:
         await self.page.goto(url)
 
-    async def get_reading_status(self) -> Optional[str]:
-        if not await wait_for_stable_state(self.page):
-            return None
+    async def get_bookshelf_id(self) -> int:
+        """Return the current bookshelf id for this book.
 
-        btn = await self.page.query_selector(self.WANT_TO_READ_BUTTON)
-        return await read_button_state(btn)
+        Returns 1 (Want to Read), 2 (Currently Reading), 3 (Already Read),
+        or -1 if the book is on no shelf.
+        """
+        await self.page.wait_for_selector(
+            self.WANT_TO_READ_FORM, timeout=5000
+        )
+        return await get_bookshelf_status(self.page)
 
-    async def click_and_wait_for_state(self, expected_selector: str) -> None:
+    async def _click_and_wait_for_action(self, expected_action: str) -> None:
+        """Click the primary button and wait until the form's action flips.
+
+        After clicking 'add', the form should switch to action='remove'
+        (because clicking again would now remove). After 'remove', the
+        form should switch to action='add'.
+        """
         async with self.page.expect_response(
             lambda r: "bookshelves.json" in r.url
             and r.request.method == "POST",
@@ -36,21 +39,26 @@ class BookPage(BasePage):
         ):
             await self.page.click(self.WANT_TO_READ_BUTTON)
 
-        await self.page.wait_for_selector(
-            expected_selector,
-            timeout=5000,
-        )
+        js = f"""() => {{
+            const el = document.querySelector("{self.ACTION_INPUT_SELECTOR}");
+            return el && el.value === "{expected_action}";
+        }}"""
+        await self.page.wait_for_function(js, timeout=5000)
 
     async def add_to_reading_list(self) -> bool:
-        if await self.get_reading_status() == STATUS_ACTIVATED:
+        """Ensure the book is on Want-to-Read. Returns True on success."""
+        if await self.get_bookshelf_id() == BOOKSHELF_WANT_TO_READ:
             return True
 
-        await self.click_and_wait_for_state(self.BUTTON_ACTIVATED)
-        return await self.get_reading_status() == STATUS_ACTIVATED
+        # Once added, the form should flip to action='remove'
+        await self._click_and_wait_for_action("remove")
+        return await self.get_bookshelf_id() == BOOKSHELF_WANT_TO_READ
 
     async def remove_from_reading_list(self) -> bool:
-        if await self.get_reading_status() == STATUS_UNACTIVATED:
+        """Ensure the book is NOT on Want-to-Read. Returns True on success."""
+        if await self.get_bookshelf_id() != BOOKSHELF_WANT_TO_READ:
             return True
 
-        await self.click_and_wait_for_state(self.BUTTON_UNACTIVATED)
-        return await self.get_reading_status() == STATUS_UNACTIVATED
+        # Once removed, the form should flip to action='add'
+        await self._click_and_wait_for_action("add")
+        return await self.get_bookshelf_id() != BOOKSHELF_WANT_TO_READ

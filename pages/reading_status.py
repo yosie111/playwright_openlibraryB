@@ -1,51 +1,28 @@
-"""Shared logic for the Want-to-Read button state."""
-from typing import Optional
+async def get_bookshelf_status(item) -> int:
+    """
+    Returns the active bookshelf id:
+    1 = Want to Read
+    2 = Currently Reading
+    3 = Already Read
 
-from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+    Returns -1 if no active bookshelf was found.
+    """
+    
+    forms = await item.query_selector_all("form.reading-log.primary-action")
 
-# Selectors
-READING_LOG_FORM = "form.reading-log.primary-action"
-WANT_TO_READ_BUTTON = f"{READING_LOG_FORM} button.book-progress-btn"
-# Search-result card variant (no wrapping form)
-WANT_TO_READ_BUTTON_IN_CARD = "button.book-progress-btn.primary-action"
+    for form in forms:
+        action_input = await form.query_selector("input[name='action']")
+        shelf_input = await form.query_selector("input[name='bookshelf_id']")
 
-# Class names
-ACTIVATED_CLASS = "activated"
-UNACTIVATED_CLASS = "unactivated"
+        if not action_input or not shelf_input:
+            continue
 
-# Status values
-STATUS_ACTIVATED = "activated"
-STATUS_UNACTIVATED = "unactivated"
+        value_action = await action_input.get_attribute("value")
+        value_bookshelf_id = await shelf_input.get_attribute("value")
 
-STATUS_TO_BOOL = {
-    STATUS_ACTIVATED: True,
-    STATUS_UNACTIVATED: False,
-}
-
-
-async def read_button_state(btn) -> Optional[str]:
-    """Return 'activated', 'unactivated' or None from a button handle."""
-    if btn is None:
-        return None
-
-    cls = (await btn.get_attribute("class") or "").split()
-    if ACTIVATED_CLASS in cls:
-        return STATUS_ACTIVATED
-    if UNACTIVATED_CLASS in cls:
-        return STATUS_UNACTIVATED
-    return None
-
-
-async def wait_for_stable_state(page, timeout: int = 5000) -> bool:
-    """Wait until the button settles into activated/unactivated."""
-    js = f"""() => {{
-        const el = document.querySelector('{WANT_TO_READ_BUTTON}');
-        if (!el) return false;
-        return el.classList.contains('{ACTIVATED_CLASS}')
-            || el.classList.contains('{UNACTIVATED_CLASS}');
-    }}"""
-    try:
-        await page.wait_for_function(js, timeout=timeout)
-        return True
-    except PlaywrightTimeoutError:
-        return False
+        if value_action == "remove" and value_bookshelf_id:
+            shelf_id = int(value_bookshelf_id)
+            
+            if shelf_id in (1, 2, 3):
+                return shelf_id
+    return -1

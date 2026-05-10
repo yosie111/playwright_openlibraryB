@@ -5,11 +5,7 @@ from config import BASE_URL
 from pages.base_page import BasePage
 from pages.book_page import BookPage
 from pages.models import BookInfo
-from pages.reading_status import (
-    STATUS_TO_BOOL,
-    WANT_TO_READ_BUTTON_IN_CARD,
-    read_button_state,
-)
+from pages.reading_status import get_bookshelf_status
 
 
 class BookSearchPage(BasePage):
@@ -18,8 +14,6 @@ class BookSearchPage(BasePage):
     RESULTS_SELECTOR = ".searchResultItem"
     NEXT_PAGE_SELECTOR = "a[aria-label='Go to next page']"
     LINK_SELECTOR = ".booktitle a"
-    # Button inside a search-result card
-    WANT_TO_READ_BTN = WANT_TO_READ_BUTTON_IN_CARD
 
     def __init__(self, page, username: str = ""):
         super().__init__(page)
@@ -41,10 +35,6 @@ class BookSearchPage(BasePage):
         async with self.page.expect_navigation(wait_until="load"):
             await self.page.click(self.search_button)
 
-    async def extract_reading_status(self, item) -> Optional[str]:
-        btn = await item.query_selector(self.WANT_TO_READ_BTN)
-        return await read_button_state(btn)
-
     async def extract_card_info(self, item) -> Optional[BookInfo]:
         text = await item.inner_text()
 
@@ -59,13 +49,12 @@ class BookSearchPage(BasePage):
         if not href:
             return None
 
-        status = await self.extract_reading_status(item)
-        activated = STATUS_TO_BOOL.get(status)
+        bookshelf_id = await get_bookshelf_status(item)
 
         return BookInfo(
             url=BASE_URL + href,
             year=year,
-            activated=activated,
+            bookshelf_id=bookshelf_id,
         )
 
     async def collect_books_under_year(
@@ -99,17 +88,13 @@ class BookSearchPage(BasePage):
         return collected
 
     async def search_books_by_title_under_year(
-        self, query: str, max_year: int, limit: int = 10) -> list[str]:
+        self, query: str, max_year: int, limit: int = 5
+    ) -> list[str]:
         await self.search(query)
-        print(f"Searching for '{query}' and filtering by year <= {max_year}...")
-        books = await self.collect_books_under_year(max_year, limit, max_pages=10)
+        print(
+            f"Searching for '{query}' and filtering by year <= {max_year}..."
+        )
+        books = await self.collect_books_under_year(
+            max_year, limit, max_pages=7
+        )
         return [b.url for b in books]
-
-    # async def search_books_by_title_under_year(
-    #     self, query: str, max_year: int, limit: int = 10
-    # ) -> list[BookInfo]:
-    #     await self.search(query)
-    #     print(f"Searching for '{query}' and filtering by year <= {max_year}...")
-    #     return await self.collect_books_under_year(
-    #         max_year, limit, max_pages=5
-    #     )

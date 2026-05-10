@@ -32,6 +32,8 @@ async def wait_for_y():
             break
         print("Browser stays open. Type Y to close.")
 
+async def wait_for_enter():
+    await asyncio.to_thread(input, "Press Enter to close the browser: ")
 
 async def main():
     async with async_playwright() as p:
@@ -78,7 +80,7 @@ async def main():
 
         finally:
             print("\nDone. Inspect the browser.")
-            await wait_for_y()
+            await wait_for_enter()
             await context.close()
             print("Context closed.")
 

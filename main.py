@@ -31,7 +31,9 @@ async def wait_for_y():
         if answer.strip().upper() == "Y":
             break
         print("Browser stays open. Type Y to close.")
-
+        
+async def wait_for_enter():
+    await asyncio.to_thread(input, "Press Enter to close the browser: ")
 
 async def main():
     cases = load_search_cases(CASES_CSV)
@@ -67,7 +69,7 @@ async def main():
             collector.write_report(PERF_REPORT_PATH)
 
             print("\nDone. Inspect the browser.")
-            #await wait_for_y()
+            await wait_for_enter()
             await context.close()
             print("Context closed.")
 

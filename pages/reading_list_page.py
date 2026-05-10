@@ -1,13 +1,13 @@
 from config import BASE_URL, SCREENSHOTS_DIR
 from pages.base_page import BasePage
 from pages.book_page import BookPage
-from pages.models import BookInfo
-from pages.reading_status import STATUS_ACTIVATED
+from pages.models import BOOKSHELF_WANT_TO_READ, BookInfo
 from utils import make_safe_filename
 
 
 def books_needing_add(books: list[BookInfo]) -> list[BookInfo]:
-    return [b for b in books if b.activated is not True]
+    """Books that are NOT currently on the Want-to-Read shelf."""
+    return [b for b in books if b.bookshelf_id != BOOKSHELF_WANT_TO_READ]
 
 
 class ReadingListPage(BasePage):
@@ -36,15 +36,17 @@ class ReadingListPage(BasePage):
         actual = await self.get_want_to_read_count()
         assert actual == expected_count, (
             f"Expected {expected_count} books in {self.username}'s "
-            f"want-to-read list, got {actual}")
+            f"want-to-read list, got {actual}"
+        )
 
     async def add_books_to_reading_list(
         self, books: list[BookInfo]
     ) -> None:
         for info in books:
             await self.book_page.goto(info.url)
-            status = await self.book_page.get_reading_status()
-            if status == STATUS_ACTIVATED:
+            shelf_id = await self.book_page.get_bookshelf_id()
+
+            if shelf_id == BOOKSHELF_WANT_TO_READ:
                 print(f"  Already in list: {info.url}")
             else:
                 ok = await self.book_page.add_to_reading_list()

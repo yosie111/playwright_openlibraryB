@@ -33,9 +33,8 @@ async def run_case(case, page, username, collector):
     )
     print(f"Found {len(books)} books:")
     for b in books:
-        print(f"  [{b.activated}] [{b.year}] {b.url}")
-
-    to_add = books_needing_add(books)
+        print(f"  [shelf={b.bookshelf_id}] [{b.year}] {b.url}")
+    to_add =  books_needing_add(books)
     reading_list_page = ReadingListPage(page, username)
     # Measure first book page
     if to_add:
