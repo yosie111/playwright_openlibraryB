@@ -1,7 +1,7 @@
 BASE_URL = "https://openlibrary.org"
 SCREENSHOTS_DIR = "screenshots"
 DEFAULT_TIMEOUT = 5000
-
+STORAGE_STATE_PATH = "storage_state.json"
 
 # Performance thresholds (milliseconds)
 PERF_THRESHOLD_SEARCH_MS = 3000

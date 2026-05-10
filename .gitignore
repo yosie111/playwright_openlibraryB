@@ -1,6 +1,7 @@
 # Secrets and sessions
 .env
 playwright_profile/
+storage_state.json
 
 # Generated outputs
 screenshots/
