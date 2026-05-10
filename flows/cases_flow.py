@@ -36,8 +36,7 @@ async def run_case(case, page, username, collector):
         print(f"  [{b.activated}] [{b.year}] {b.url}")
 
     to_add = books_needing_add(books)
-    reading_list_page = ReadingListPage(page)
-
+    reading_list_page = ReadingListPage(page, username)
     # Measure first book page
     if to_add:
         await reading_list_page.book_page.goto(to_add[0].url)
@@ -51,7 +50,7 @@ async def run_case(case, page, username, collector):
         )
 
     # Count + measure reading list page
-    count_before = await reading_list_page.get_want_to_read_count(username)
+    count_before = await reading_list_page.get_want_to_read_count()
     collector.add(
         await measure_page_performance(
             page,
@@ -66,7 +65,7 @@ async def run_case(case, page, username, collector):
     # Add and assert
     await reading_list_page.add_books_to_reading_list(to_add)
     expected = count_before + len(to_add)
-    await reading_list_page.assert_reading_list_count(username, expected)
+    await reading_list_page.assert_reading_list_count(expected)
     print(f"  PASS: reading list now has {expected} books")
 
 

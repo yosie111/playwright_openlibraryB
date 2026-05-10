@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -10,18 +9,13 @@ from config import (
     PERF_REPORT_PATH,
     SCREENSHOTS_DIR,
 )
-from flows.auth_flow import login_if_needed
+from flows.auth_flow import load_saved_session, login_if_needed
 from flows.cases_flow import run_all_cases
 from performance import PerformanceCollector
 from utils import load_search_cases
 
 # Load .env
 load_dotenv(Path(__file__).parent / ".env")
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s: %(message)s",
-)
 
 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 PROFILE_DIR = "playwright_profile"
@@ -52,10 +46,15 @@ async def main():
         )
 
         try:
+            # Restore cookies from storage_state.json (if a previous run saved them).
+            # The persistent profile already keeps cookies between runs, but this
+            # is a belt-and-braces fallback for when the profile dir is wiped.
+            await load_saved_session(context)
+
             page = (
                 context.pages[0] if context.pages else await context.new_page()
             )
-            await page.goto(BASE_URL)
+            await page.goto(BASE_URL, wait_until="domcontentloaded")
 
             username = await login_if_needed(page)
             if not username:

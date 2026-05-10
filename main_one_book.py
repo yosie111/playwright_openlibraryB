@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 from pathlib import Path
 
@@ -7,24 +6,20 @@ from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 
 from config import BASE_URL, SCREENSHOTS_DIR
-from flows.auth_flow import login_if_needed
+from flows.auth_flow import load_saved_session, login_if_needed
 from pages.book_search_page import BookSearchPage
+
 
 # Load .env
 load_dotenv(Path(__file__).parent / ".env")
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s: %(message)s",
-)
 
 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 PROFILE_DIR = "playwright_profile"
 
 # One-book run configuration
-QUERY = "harry"
-MAX_YEAR = 1950
-LIMIT = 3
+QUERY = "History"
+MAX_YEAR = 1900
+LIMIT = 30
 
 
 async def wait_for_y():
@@ -44,12 +39,13 @@ async def main():
             user_data_dir=PROFILE_DIR,
             headless=False,
         )
-
         try:
+            await load_saved_session(context)
+
             page = (
                 context.pages[0] if context.pages else await context.new_page()
             )
-            await page.goto(BASE_URL)
+            await page.goto(BASE_URL, wait_until="domcontentloaded")
 
             username = await login_if_needed(page)
             if not username:
@@ -58,21 +54,21 @@ async def main():
 
             search_page = BookSearchPage(page)
 
-            books = await search_page.search_books_by_title_under_year(
+            urls = await search_page.search_books_by_title_under_year(
                 query=QUERY,
                 max_year=MAX_YEAR,
                 limit=LIMIT,
             )
 
-            print("\n=== One book result ===")
-            if not books:
+            print(f"\n=== Found {len(urls)} books ===")
+
+            if not urls:
                 print("No matching book was found.")
                 return
 
-            book = books[0]
-            print(f"URL: {book.url}")
-            print(f"Year: {book.year}")
-            print(f"Activated: {book.activated}")
+            for i, url in enumerate(urls, start=1):
+                print(f"\nBook #{i}")
+                print(f"URL: {url}")
 
             await page.screenshot(
                 path=str(Path(SCREENSHOTS_DIR) / "one_book_debug.png"),

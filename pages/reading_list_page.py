@@ -2,18 +2,22 @@ from config import BASE_URL, SCREENSHOTS_DIR
 from pages.base_page import BasePage
 from pages.book_page import BookPage
 from pages.models import BookInfo
+from pages.reading_status import STATUS_ACTIVATED
 from utils import make_safe_filename
+
 
 def books_needing_add(books: list[BookInfo]) -> list[BookInfo]:
     return [b for b in books if b.activated is not True]
+
 
 class ReadingListPage(BasePage):
 
     PATH = "/account/books/want-to-read"
     LIST_ITEM_SELECTOR = ".searchResultItem"
 
-    def __init__(self, page):
+    def __init__(self, page, username: str):
         super().__init__(page)
+        self.username = username
         self.results = self.LIST_ITEM_SELECTOR
         self.book_page = BookPage(page)
 
@@ -23,19 +27,16 @@ class ReadingListPage(BasePage):
     async def get_book_count(self) -> int:
         return await self.get_results_count()
 
-    async def get_want_to_read_count(self, username: str) -> int:
-        url = f"{BASE_URL}/people/{username}/books/want-to-read"
+    async def get_want_to_read_count(self) -> int:
+        url = f"{BASE_URL}/people/{self.username}/books/want-to-read"
         await self.page.goto(url)
         return await self.get_book_count()
 
-    async def assert_reading_list_count(
-        self, username: str, expected_count: int
-    ) -> None:
-        actual = await self.get_want_to_read_count(username)
+    async def assert_reading_list_count(self, expected_count: int) -> None:
+        actual = await self.get_want_to_read_count()
         assert actual == expected_count, (
-            f"Expected {expected_count} books in {username}'s "
-            f"want-to-read list, got {actual}"
-        )
+            f"Expected {expected_count} books in {self.username}'s "
+            f"want-to-read list, got {actual}")
 
     async def add_books_to_reading_list(
         self, books: list[BookInfo]
@@ -43,7 +44,7 @@ class ReadingListPage(BasePage):
         for info in books:
             await self.book_page.goto(info.url)
             status = await self.book_page.get_reading_status()
-            if status == "activated":
+            if status == STATUS_ACTIVATED:
                 print(f"  Already in list: {info.url}")
             else:
                 ok = await self.book_page.add_to_reading_list()

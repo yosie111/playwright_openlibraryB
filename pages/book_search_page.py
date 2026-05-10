@@ -16,13 +16,14 @@ class BookSearchPage(BasePage):
 
     SEARCH_BAR_SELECTOR = ".search-bar"
     RESULTS_SELECTOR = ".searchResultItem"
-    NEXT_PAGE_SELECTOR = "ol-pagination a[aria-label='Go to next page']"
+    NEXT_PAGE_SELECTOR = "a[aria-label='Go to next page']"
     LINK_SELECTOR = ".booktitle a"
     # Button inside a search-result card
     WANT_TO_READ_BTN = WANT_TO_READ_BUTTON_IN_CARD
 
-    def __init__(self, page):
+    def __init__(self, page, username: str = ""):
         super().__init__(page)
+        self.username = username
 
         self.search_input = (
             f"{self.SEARCH_BAR_SELECTOR} form input[name='q'][type='text']"
@@ -98,10 +99,17 @@ class BookSearchPage(BasePage):
         return collected
 
     async def search_books_by_title_under_year(
-        self, query: str, max_year: int, limit: int = 5
-    ) -> list[BookInfo]:
+        self, query: str, max_year: int, limit: int = 10) -> list[str]:
         await self.search(query)
         print(f"Searching for '{query}' and filtering by year <= {max_year}...")
-        return await self.collect_books_under_year(
-            max_year, limit, max_pages=5
-        )
+        books = await self.collect_books_under_year(max_year, limit, max_pages=10)
+        return [b.url for b in books]
+
+    # async def search_books_by_title_under_year(
+    #     self, query: str, max_year: int, limit: int = 10
+    # ) -> list[BookInfo]:
+    #     await self.search(query)
+    #     print(f"Searching for '{query}' and filtering by year <= {max_year}...")
+    #     return await self.collect_books_under_year(
+    #         max_year, limit, max_pages=5
+    #     )
